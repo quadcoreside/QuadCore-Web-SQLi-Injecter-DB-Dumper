@@ -1,0 +1,65 @@
+<div class="row spacer">
+
+    <div class="col-md-4 col-sm-12 col-xs-12">
+
+        <div class="panel panel-primary">
+
+            <div class="panel-heading"> </div>
+            <div class="panel-body">
+
+                <fieldset>
+
+                    <div class="form-group">
+                        <div class="form-group">
+                            <textarea class="form-control" rows="5" ng-disabled="field_recherche" ng-model="recherche.dorks" placeholder="Dork exemple: page.php?id="></textarea>
+                            <br>
+                            <div class="form-group pull-right">
+                                <input class="form-control" ng-model="recherche.page" type="number" min="1" max="100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Search Engine :</label>
+                        <div class="checkbox"><label><input ng-model="recherche.chk_google" type="checkbox">Google</label></div>
+                        <div class="checkbox"><label><input ng-model="recherche.chk_bing" type="checkbox">Bing</label></div>
+                        <div class="checkbox"><label><input ng-model="recherche.chk_yahoo" type="checkbox">Yahoo</label></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Action :</label><br/>
+                        <button class="btn btn-primary" ng-click="export()">Export</button>
+                        <button class="btn btn-danger" ng-click="clear()">Clear</button>
+                    </div>
+
+                    <div class="form-group text-center">
+                        <button class="btn btn-success btn-lg" ng-click="startRecherche()">Start</button>
+                    </div>
+
+                </fieldset>
+
+            </div>
+
+            <div class="panel">{{debug}}</div>
+            <br>
+            <div class="panel-footer"> </div>
+
+        </div>
+
+    </div>
+
+    <div class="col-md-8 col-sm-12 col-xs-12" >
+        <div class="st-body-scroll" style="overflow-y: auto; max-height: 400px; padding-top:10px;">
+            <table class="scrollTable" cellpadding="0" cellspacing="0" border="0" >
+                <thead>
+                    <tr><th>URL</th></tr>
+                </thead>
+                <tbody>
+                    <tr ng-repeat="url in urls"><td>{{url}}</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+</div>

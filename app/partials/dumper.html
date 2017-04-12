@@ -1,0 +1,101 @@
+<div class="row spacer">
+
+  <div class="col-lg-6 col-md-6 col-sm-4 col-xs-12">
+    <div class="input-group">
+      <input type="text" ng-model="dumper.url_point" class="form-control" placeholder="URL target builded: http://site.com/page.php?id=999999.9+union+all+select+1,[t],3,4,5,6,7,8,9,10,11,12,13,14,15,16,17">
+      <span class="input-group-btn">
+        <button class="btn btn-primary" ng-click="start()" type="button">OK</button>
+      </span>
+    </div>
+
+    <div class="panel panel-success spacer" ng-show="dumper">
+        <div class="panel-heading">Infos Serveur</div>
+        <div class="panel-body">
+            <span>Version: <b>{{dumper.version}}</b></span>
+            <br/>
+            <span>User: <b>{{dumper.user}}</b></span>
+            <br/>
+            <span>IP: <b>{{dumper.ip}}</b></span>
+            <br/>
+        </div>
+    </div>
+
+    <!-- FOR DEBUG -->
+    <!--<div class="panel" style="overflow-y:auto;max-height:200px;min-height:200px;">
+        <p>{{dumper || Json}}</p>
+    </div>-->
+
+  </div>
+
+  <div class="col-lg-6 col-md-6 col-sm-8 col-xs-12">
+      <div class="panel panel-default">
+          <div class="panel-heading" style="padding: 5px 15px; border-bottom: none;">
+            <h4 style="margin-top:-10px;">Schéma
+              <div class="form-group pull-right">
+                  <button class="btn btn-primary btn-sm" ng-click="getDiagramMore('basededonne')">Get DB</button>
+                  <button class="btn btn-primary btn-sm" ng-click="getDiagramMore('tables')">Get Tables</button>
+                  <button class="btn btn-primary btn-sm" ng-click="getDiagramMore('colonnes')">Get Columns</button>
+                  <button class="btn btn-success btn-sm" ng-click="getDumpData()">Get Datas</button>
+              </div>
+            </h4>
+          </div>
+          <div class="panel-body" style="overflow-y:auto;max-height:350px;min-height:350px;width:98%;">
+            <span us-spinner spinner-key="spinner-2"></span>
+            <ul class="tree" ng-controller="TreeviewController">
+
+               <li ng-repeat="(db_k, db_v) in dumper.diagram">
+                  <label><input type="checkbox" ng-click="onCheck(db_v)" ng-model="db_v.checked"/>{{db_v.name}}</label>
+                  <ul>
+                    <li ng-repeat="(tb_k, tb_v) in db_v.childs">
+                      <label><input type="checkbox" ng-click="onCheck(tb_v)" ng-model="tb_v.checked"/>{{tb_v.name}}</label>
+                      <ul>
+                        <li ng-repeat="(cl_k, cl_v) in tb_v.childs"><label><input type="checkbox" ng-model="cl_v.checked"/>{{cl_v.name}}</label></li>
+                      </ul>
+                    </li>
+                  </ul>
+               </li>
+
+            </ul>
+          </div>
+      </div>
+  </div>
+
+</div>
+
+
+<div class="row">
+  <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+    <div class="panel panel-default">
+
+      <div class="panel-heading" style="padding: 5px 15px; border-bottom: none;">
+        <h5>Data : <b>{{workspaces.length > 0 ? '(' + (workspaces.length - 1) + ' Work Space)' : ''}}</b> <span us-spinner spinner-key="spinner-3"></span> <button class="btn btn-danger btn-xs pull-right" ng-click="setCancel(true)" ng-show="!cancel">Cancel</button></h5>
+      </div>
+
+      <div class="panel-body">
+        <span us-spinner spinner-key="spinner-3"></span>
+
+        <!-- Workspaces nav -->
+        <ul class="nav nav-tabs">
+            <li role="presentation" ng-repeat="wk in workspaces" ng-class="{active: currentWorkspace==wk}" ng-show="wk.name != ''" ng-click="changeCurrentWorkspace(wk)">
+              <a  style="cursor: pointer;">
+               {{wk.name}} {{wk.row_count != null ? '(' + wk.data_rows.length + '/' + (wk.row_count) + ' rows)' : ''}}
+                <span style="cursor: pointer;" ng-click="deleteWk(wk)" class="glyphicon glyphicon-remove"></span>
+              </a>
+            </li>
+        </ul>
+
+        <!-- Workspaces containers -->
+        <div class="workspaceContainer" ng-repeat="wk in workspaces" ng-show="currentWorkspace==wk">
+            <table bs-table-control="wk.bsTableControl"></table>
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+<script>
+  $('.tree').treeview();
+</script>

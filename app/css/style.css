@@ -1,0 +1,124 @@
+/*
+ QUADCORE ENGINEERING MSB
+*/
+h1 {
+    margin-top: 0;
+    float: left;
+}
+#controls {
+    float: left;
+    padding: 0.3em 1em;
+}
+table.scrollTable {
+    width: 100%;
+    border: 1px solid #ddd;
+}
+thead {
+    background-color: #eee;
+}
+thead th {
+    text-align: center;
+    padding: 0.1em 0.3em;
+}
+tbody td {
+    border-top: 1px solid #eee;
+    border-right: 1px solid #eee;
+    padding: 0.1em 0.3em;
+}
+tbody tr.odd td {
+    background-color: #f9f9f9;
+}
+.btn-file {
+    position: relative;
+    overflow: hidden;
+}
+.btn-file input[type=file] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 100px;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    outline: none;
+    background: white;
+    cursor: inherit;
+    display: block;
+}
+
+.spinner {
+  width: 100px;
+}
+.spinner input {
+  text-align: right;
+}
+.input-group-btn-vertical {
+  position: relative;
+  white-space: nowrap;
+  width: 1%;
+  vertical-align: middle;
+  display: table-cell;
+}
+.input-group-btn-vertical > .btn {
+  display: block;
+  float: none;
+  width: 100%;
+  max-width: 100%;
+  padding: 8px;
+  margin-left: -1px;
+  position: relative;
+  border-radius: 0;
+}
+.input-group-btn-vertical > .btn:first-child {
+  border-top-right-radius: 4px;
+}
+.input-group-btn-vertical > .btn:last-child {
+  margin-top: -2px;
+  border-bottom-right-radius: 4px;
+}
+.input-group-btn-vertical i{
+  position: absolute;
+  top: 0;
+  left: 4px;
+}
+#statut_strip {
+ position: fixed;
+ bottom: 0;
+ width: 100%;
+ height: 30px;
+ background: #0078DD;
+}
+
+/* TreeView */
+ul.checktree-root, ul#tree ul {
+  list-style: none;
+}
+ul.checktree-root label {
+  font-weight: bold;
+  position: relative;
+}
+ul.checktree-root label input {
+  position: relative;
+  top: 2px;
+  left: -5px;
+}
+
+ul.checktree-root label:hover {
+  background-color: #f5f5f5;
+  color: #33799B;
+  font-weight: bold;
+  padding-left: 0;
+}
+/* /.. TreeView */
+
+@media only screen and (max-width: 768px) {
+  #col_maximize{
+      width: 100%;
+  }
+}
+
+.spacer {
+  margin-top: 20px;
+}

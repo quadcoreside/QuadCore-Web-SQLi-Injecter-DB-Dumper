@@ -1,0 +1,38 @@
+<div class="container spacer">
+<span us-spinner spinner-key="spinner-1"></span>
+  <div class="row">
+
+    <div class="col-md-12 col-sm-12 col-xs-12">
+      <label>URL:</label>
+        <input type="text" ng-model="analyse.url_point" class="form-control" placeholder="http://site.com/page.php?id=123">
+    </div>
+
+    <div class="col-md-6 col-sm-8 col-xs-12 spacer">
+      <div class="form-group">
+        <label>Union styles:</label>
+        <textarea class="form-control" ng-model="analyse.union_style" rows="15" cols="" placeholder="999999.9 union all select [t]"></textarea>
+      </div>
+
+    </div>
+
+    <div class="col-md-6 col-sm-4 col-xs-12">
+      <br>
+        <div class="form-group">
+            <button class="btn btn-success btn-lg" ng-click="start()">Start</button>
+        </div>
+        <div ng-show="data_response.result">
+          <b>URL Target:</b> {{data_response.result.injection_point}}
+        </div>
+      <div class="panel panel-default" ng-show="data_response.result">
+        <div class="panel-heading">Result:</div>
+        <div class="panel-body">{{analyse.data}}</div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+  $('.tree').treeview();
+</script>
