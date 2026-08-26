@@ -4,7 +4,7 @@ import asyncio
 from typing import Any
 
 from api.config import settings
-from api.jobs.manager import JobContext
+from api.jobs.manager import Handler, JobContext
 from engine.detection.engine import DetectionEngine, Detector, default_detectors
 from engine.dorks.pipeline import filter_candidates
 from engine.dorks.searxng import SearxngClient
@@ -108,7 +108,7 @@ async def dump_handler(params: dict[str, Any], ctx: JobContext) -> dict[str, Any
     return {"db": db, "table": table, "columns": columns, "rows": rows, "count": len(rows)}
 
 
-HANDLERS = {
+HANDLERS: dict[str, Handler] = {
     "scan": scan_handler,
     "dork": dork_handler,
     "dump": dump_handler,
