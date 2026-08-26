@@ -1,0 +1,35 @@
+# Version control / editor
+.git
+.gitignore
+.vscode
+.idea
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+dist/
+build/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.env
+*.sqlite3
+
+# Tests — not needed in the runtime image
+tests/
+
+# Frontend — web/dist is copied into the `web` image at compose time, not built
+# inside the API image; node_modules is never needed in any image.
+node_modules/
+web/node_modules/
+web/dist/
+
+# Legacy PHP/AngularJS archive — reference only, not part of any image
+legacy/
+
+# Docker build context leftovers
+docker-compose.yml
+docker/vuln-target/**/*.md

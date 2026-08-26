@@ -1,0 +1,29 @@
+# Minimal SearXNG settings for QuadCore SQLi's dork pipeline
+# (engine/dorks/searxng.py calls `<base_url>/search?...&format=json`).
+#
+# `use_default_settings: true` merges these overrides on top of the searxng/searxng
+# image's stock settings.yml, so we only need to state what differs. Full reference:
+# https://github.com/searxng/searxng/blob/master/searx/settings.yml
+use_default_settings: true
+
+general:
+  instance_name: "quadcore-searxng"
+
+server:
+  # The official image's docker-entrypoint.sh replaces this placeholder with a
+  # random secret on first boot. Override it yourself if you disable that step.
+  secret_key: "ultrasecretkey"
+  limiter: false      # this instance is only reachable from the compose network,
+                       # queried programmatically by the engine — no need to
+                       # rate-limit or CAPTCHA it.
+  image_proxy: false
+
+search:
+  safe_search: 0
+  autocomplete: ""
+  formats:
+    - html
+    - json           # required: the engine consumes the JSON API, not the HTML UI.
+
+ui:
+  static_use_hash: true

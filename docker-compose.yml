@@ -1,0 +1,98 @@
+# QuadCore SQLi — local/deployment stack.
+#
+# Core stack (`docker compose up`):
+#   - api      FastAPI + async engine, SQLite job store, WebSocket progress.
+#   - searxng  Self-hosted SearXNG instance used by the "dork" job type.
+#   - web      nginx serving the built SPA (web/dist) and reverse-proxying /api.
+#
+# Test-only stack (`docker compose --profile test up vuln-target`):
+#   - vuln-target(-db)  an INTENTIONALLY vulnerable PHP+MySQL app, for exercising
+#     the engine against a real (but disposable, isolated) target during local
+#     integration testing. Never expose this profile outside your machine.
+#
+# Every published port binds to 127.0.0.1 only — this tool is not meant to be
+# reachable from outside the host it runs on (see api/config.py: default bind
+# is 127.0.0.1, precisely to avoid turning it into an open SSRF relay).
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      # NOTE: nothing in api/ currently reads Settings.host/.port — the actual
+      # bind address/port for uvicorn come from the Dockerfile's CMD flags
+      # (--host 0.0.0.0 --port 8000). QCSQLI_HOST/QCSQLI_PORT are set here for
+      # documentation/forward-compatibility; if you change the container's
+      # port, update both the CMD in Dockerfile and the mapping below.
+      QCSQLI_HOST: 0.0.0.0
+      QCSQLI_PORT: "8000"
+      QCSQLI_SEARXNG_URL: http://searxng:8080
+      QCSQLI_DB_PATH: /data/quadcore.sqlite3
+      # QCSQLI_TOKEN: set this to require the `X-Token` header on POST /api/jobs.
+      # QCSQLI_CONCURRENCY: "10"
+      # QCSQLI_PER_HOST_DELAY: "0"
+    volumes:
+      - quadcore_data:/data
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      - searxng
+    restart: unless-stopped
+
+  searxng:
+    image: searxng/searxng:latest
+    volumes:
+      - ./docker/searxng/settings.yml:/etc/searxng/settings.yml:ro
+    ports:
+      - "127.0.0.1:8080:8080"
+    restart: unless-stopped
+
+  web:
+    image: nginx:alpine
+    volumes:
+      # Built by `cd web && npm run build` (produces web/dist) — see README.md.
+      - ./web/dist:/usr/share/nginx/html:ro
+      - ./docker/web/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "127.0.0.1:8081:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  # ------------------------------------------------------------------
+  # TEST-ONLY: intentionally vulnerable target for local integration tests.
+  # Only started with `--profile test`. Isolated on the compose network,
+  # not reachable except from the host running this compose file.
+  # ------------------------------------------------------------------
+  vuln-target-db:
+    image: mysql:8.0
+    profiles: ["test"]
+    environment:
+      MYSQL_ROOT_PASSWORD: vulnroot
+      MYSQL_DATABASE: vulnapp
+      MYSQL_USER: vulnapp
+      MYSQL_PASSWORD: vulnapp
+    volumes:
+      - ./docker/vuln-target/seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+      - vuln_target_db_data:/var/lib/mysql
+    restart: "no"
+
+  vuln-target:
+    build:
+      context: ./docker/vuln-target
+    profiles: ["test"]
+    environment:
+      DB_HOST: vuln-target-db
+      DB_NAME: vulnapp
+      DB_USER: vulnapp
+      DB_PASSWORD: vulnapp
+    depends_on:
+      - vuln-target-db
+    ports:
+      - "127.0.0.1:8090:80"
+    restart: "no"
+
+volumes:
+  quadcore_data:
+  vuln_target_db_data:
