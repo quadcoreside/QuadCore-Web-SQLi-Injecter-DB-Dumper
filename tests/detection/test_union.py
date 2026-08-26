@@ -31,3 +31,23 @@ async def test_union_detector_negative_when_union_blocked():
     async with AsyncHttpClient() as c:
         result = await UnionDetector().detect(c, _numeric_point())
     assert result is None
+
+
+@respx.mock
+async def test_union_detector_reports_order_by_crosscheck():
+    mount(FakeVulnerableApp(visible_columns=3, visible_index=2))
+    async with AsyncHttpClient() as c:
+        result = await UnionDetector().detect(c, _numeric_point())
+    assert result is not None
+    assert "ORDER BY confirmé" in result.details
+
+
+@respx.mock
+async def test_union_detector_rejects_static_reflected_banner():
+    # La colonne « visible » renvoie toujours une bannière fixe, pas notre entrée. Le
+    # comptage de colonnes réussit, mais aucun marqueur aléatoire frais n'apparaît :
+    # la confirmation par marqueur aléatoire refuse ce faux positif.
+    mount(FakeVulnerableApp(visible_columns=3, visible_index=2, reflect_static="STATIC_BANNER"))
+    async with AsyncHttpClient() as c:
+        result = await UnionDetector().detect(c, _numeric_point())
+    assert result is None

@@ -29,3 +29,13 @@ async def test_error_detector_negative_when_errors_suppressed():
     async with AsyncHttpClient() as c:
         result = await ErrorDetector().detect(c, _numeric_point())
     assert result is None
+
+
+@respx.mock
+async def test_error_detector_rejects_page_that_always_errors_on_quote():
+    # Gabarit d'erreur générique : toute présence d'un guillemet renvoie l'« erreur »,
+    # même équilibré. Le différentiel (guillemet doublé) ne se répare pas -> pas de flag.
+    mount(FakeVulnerableApp(error_on_any_quote=True))
+    async with AsyncHttpClient() as c:
+        result = await ErrorDetector().detect(c, _numeric_point())
+    assert result is None

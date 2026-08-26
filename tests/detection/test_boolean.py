@@ -29,3 +29,14 @@ async def test_boolean_detector_negative_when_no_boolean_effect():
     async with AsyncHttpClient() as c:
         result = await BooleanDetector().detect(c, _numeric_point())
     assert result is None
+
+
+@respx.mock
+async def test_boolean_detector_rejects_page_reacting_only_to_classic_payloads():
+    # La page ne « diffère » que sur la constante FALSE 1=2 (cache/WAF ayant appris les
+    # payloads connus). La paire aléatoire a=a / a=b ne produit aucun effet booléen :
+    # le second contrôle orthogonal élimine ce faux positif.
+    mount(FakeVulnerableApp(error_based=False, boolean_only_classic=True))
+    async with AsyncHttpClient() as c:
+        result = await BooleanDetector().detect(c, _numeric_point())
+    assert result is None

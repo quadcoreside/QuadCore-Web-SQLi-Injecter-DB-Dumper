@@ -32,6 +32,7 @@ NO_RESULTS = "No results."
 
 _SLEEP = re.compile(r"sleep\(\s*(\d+)", re.IGNORECASE)
 _UNION_SELECT = re.compile(r"union\s+(?:all\s+)?select\s+", re.IGNORECASE)
+_ORDER_BY = re.compile(r"order\s+by\s+(\d+)", re.IGNORECASE)
 _CLAUSE = re.compile(r"\b(?:and|or)\b(.+)$", re.IGNORECASE)
 _COMPARE = re.compile(r"(.+?)\s*(>=|<=|!=|<>|=|>|<)\s*(.+)$")
 
@@ -97,6 +98,10 @@ class FakeVulnerableApp:
         version: str = "5.7.40-log",
         user: str = "app@localhost",
         database: str = "shopdb",
+        error_on_any_quote: bool = False,
+        boolean_only_classic: bool = False,
+        reflect_static: str | None = None,
+        extra_latency_seq: list[float] | None = None,
     ) -> None:
         self.injectable_param = injectable_param
         self.visible_columns = visible_columns
@@ -109,12 +114,29 @@ class FakeVulnerableApp:
         self.version = version
         self.user = user
         self.database = database
+        # --- pièges pour éprouver la précision des détecteurs ---
+        # error_on_any_quote : la page « erreur » apparaît dès qu'un guillemet est présent,
+        #   quelle que soit la parité (gabarit d'erreur générique) -> tue l'error-based naïf.
+        self.error_on_any_quote = error_on_any_quote
+        # boolean_only_classic : seul le FALSE littéral « 1=2 » diffère, toute autre
+        #   condition est vraie (special-casing des payloads connus) -> tue le boolean naïf.
+        self.boolean_only_classic = boolean_only_classic
+        # reflect_static : la colonne visible renvoie toujours cette bannière fixe au lieu
+        #   d'évaluer l'expression injectée -> tue l'union à marqueur constant.
+        self.reflect_static = reflect_static
+        # extra_latency_seq : latence additionnelle (secondes) consommée requête par
+        #   requête, indépendante de SLEEP() -> simule un pic de latence isolé (jitter).
+        self.extra_latency_seq = extra_latency_seq
 
     # ---- HTTP ----
     def _broken(self) -> httpx.Response:
         return _page(MYSQL_ERROR) if self.error_based else _page(NO_RESULTS)
 
     async def handler(self, request: httpx.Request) -> httpx.Response:
+        if self.extra_latency_seq:
+            extra = self.extra_latency_seq.pop(0)
+            if extra:
+                await asyncio.sleep(extra * self.time_scale)
         q = parse_qs(urlsplit(str(request.url)).query, keep_blank_values=True)
         values = q.get(self.injectable_param)
         if not values:
@@ -124,8 +146,15 @@ class FakeVulnerableApp:
     async def _render(self, value: str) -> httpx.Response:
         active = re.split(r"#|--\s", value, maxsplit=1)[0].replace("/**/", " ")
 
+        if self.error_on_any_quote and "'" in active:
+            return self._broken()
         if active.count("'") % 2 == 1:
             return self._broken()
+
+        order = _ORDER_BY.search(active)
+        if order:
+            n = int(order.group(1))
+            return self._broken() if n > self.visible_columns else _page(NORMAL)
 
         truth = self._boolean_truth(active) if self.boolean_based else True
 
@@ -140,6 +169,8 @@ class FakeVulnerableApp:
             cols = _split_top_level(active[union.end():])
             if len(cols) != self.visible_columns:
                 return self._broken()
+            if self.reflect_static is not None:
+                return _page(f"reflected:{self.reflect_static}")
             return _page(f"reflected:{self._eval_expr(cols[self.visible_index - 1])}")
 
         if not truth:
@@ -151,7 +182,11 @@ class FakeVulnerableApp:
         m = _CLAUSE.search(active)
         if not m:
             return True
-        return self._eval_condition(m.group(1).strip())
+        cond = m.group(1).strip()
+        if self.boolean_only_classic:
+            # N'accorde d'effet booléen qu'à la constante FALSE bien connue.
+            return cond != "1=2"
+        return self._eval_condition(cond)
 
     def _eval_condition(self, cond: str) -> bool:
         cond = _strip_outer_parens(cond)
