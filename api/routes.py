@@ -7,6 +7,7 @@ from pydantic import BaseModel
 
 from api.jobs.manager import JobManager
 from api.jobs.store import Job, JobStore
+from api.security import host_in_scope, parse_allowlist
 from engine.dorks.library import DorkLibrary
 
 router = APIRouter(prefix="/api")
@@ -31,6 +32,16 @@ def _check_token(request: Request, token: str | None) -> None:
         raise HTTPException(status_code=401, detail="token invalide")
 
 
+def _check_scope(request: Request, body: CreateJob) -> None:
+    """Refuse les jobs scan/dump dont la cible sort du périmètre autorisé (si défini)."""
+    if body.type not in ("scan", "dump"):
+        return
+    allowlist = parse_allowlist(request.app.state.settings.scope_allowlist)
+    url = body.params.get("url")
+    if isinstance(url, str) and not host_in_scope(url, allowlist):
+        raise HTTPException(status_code=403, detail="cible hors périmètre autorisé")
+
+
 def _job_dict(job: Job) -> dict[str, Any]:
     return {
         "id": job.id,
@@ -51,6 +62,7 @@ async def create_job(
     body: CreateJob, request: Request, x_token: str | None = Header(default=None)
 ) -> dict[str, int]:
     _check_token(request, x_token)
+    _check_scope(request, body)
     try:
         job_id = await _manager(request).create(body.type, body.params)
     except ValueError as exc:
