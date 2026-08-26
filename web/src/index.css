@@ -1,0 +1,113 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-bg text-ink font-sans antialiased;
+    background-image:
+      radial-gradient(1100px 620px at 82% -12%, rgba(53, 228, 198, 0.08), transparent 60%),
+      radial-gradient(900px 520px at 0% 108%, rgba(28, 168, 144, 0.07), transparent 55%);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    background: rgba(53, 228, 198, 0.28);
+    color: #eafffb;
+  }
+
+  *:focus-visible {
+    outline: 2px solid #35e4c6;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Scrollbars — thin, tactical */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #1b2735 transparent;
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-thumb {
+    background: #1b2735;
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: #2a3b50;
+    background-clip: padding-box;
+  }
+}
+
+@layer components {
+  .panel {
+    @apply rounded-xl border border-line bg-surface/70 shadow-panel backdrop-blur-sm;
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-line bg-raised/80 px-3 py-2 font-mono text-sm text-ink
+      placeholder:text-faint transition-colors focus:border-accent/60 focus:bg-raised;
+  }
+
+  .label {
+    @apply mb-1.5 block text-[11px] font-medium uppercase tracking-[0.14em] text-muted;
+  }
+
+  .btn {
+    @apply inline-flex select-none items-center justify-center gap-2 rounded-lg border px-3.5 py-2
+      text-sm font-medium transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-45;
+  }
+  .btn-primary {
+    @apply border-accent/40 bg-accent/15 text-accent hover:bg-accent/25 hover:shadow-glow;
+  }
+  .btn-ghost {
+    @apply border-line bg-transparent text-muted hover:border-accent/40 hover:text-ink;
+  }
+  .btn-danger {
+    @apply border-danger/40 bg-danger/10 text-danger hover:bg-danger/20 hover:shadow-glow-danger;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1.5 rounded-md border border-line bg-raised/70 px-2 py-1
+      font-mono text-xs text-muted transition-colors;
+  }
+
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.22em] text-accent/80;
+  }
+
+  /* Faint animated blueprint grid used behind headers */
+  .grid-backdrop {
+    background-image:
+      linear-gradient(rgba(53, 228, 198, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(53, 228, 198, 0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: linear-gradient(180deg, black, transparent);
+    -webkit-mask-image: linear-gradient(180deg, black, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
