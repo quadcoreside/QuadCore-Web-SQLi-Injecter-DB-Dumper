@@ -34,14 +34,20 @@ _WRAPPERS: dict[InjectionContext, Callable[[str, str], str]] = {
 }
 
 
-def build_url(point: InjectionPoint, payload: str) -> str:
-    wrap = _WRAPPERS[point.context]
-    pairs: list[tuple[str, str]] = []
-    for p in point.target.params:
-        if p is point.param:
-            pairs.append((p.name, wrap(p.value, payload)))
-        else:
-            pairs.append((p.name, p.value))
+def _rebuild(point: InjectionPoint, new_value: str) -> str:
+    pairs = [
+        (p.name, new_value if p is point.param else p.value) for p in point.target.params
+    ]
     query = urlencode(pairs, quote_via=quote)
     parts = urlsplit(point.target.base)
     return urlunsplit((parts.scheme, parts.netloc, parts.path, query, ""))
+
+
+def build_url(point: InjectionPoint, payload: str) -> str:
+    """URL avec `payload` SQL enveloppé selon le contexte du point (exploitation UNION)."""
+    return _rebuild(point, _WRAPPERS[point.context](point.param.value, payload))
+
+
+def build_raw(point: InjectionPoint, raw_suffix: str) -> str:
+    """URL avec `raw_suffix` concaténé brut à la valeur d'origine (sondes error-based)."""
+    return _rebuild(point, point.param.value + raw_suffix)

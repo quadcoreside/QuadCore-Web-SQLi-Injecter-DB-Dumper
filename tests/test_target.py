@@ -3,7 +3,7 @@ from __future__ import annotations
 from urllib.parse import parse_qs, urlsplit
 
 from engine.models import InjectionContext
-from engine.target import build_url, injection_points, parse_target
+from engine.target import build_raw, build_url, injection_points, parse_target
 
 
 def test_parse_target_extracts_params():
@@ -34,3 +34,12 @@ def test_build_url_single_quote_context_wraps_and_comments():
     url = build_url(pt, "AND 1=1")
     dec = parse_qs(urlsplit(url).query)["id"][0]
     assert dec == "1' AND 1=1-- -"
+
+
+def test_build_raw_appends_suffix_and_preserves_others():
+    t = parse_target("http://x/p?id=1&cat=news")
+    pt = injection_points(t, contexts=[InjectionContext.NUMERIC])[0]  # cible id
+    url = build_raw(pt, "'")
+    q = parse_qs(urlsplit(url).query)
+    assert q["id"] == ["1'"]
+    assert q["cat"] == ["news"]
