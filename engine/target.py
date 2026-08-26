@@ -4,6 +4,7 @@ from collections.abc import Callable
 from urllib.parse import parse_qsl, quote, urlencode, urlsplit, urlunsplit
 
 from engine.models import InjectionContext, InjectionPoint, Param, Target
+from engine.tamper.base import Tamper, apply_chain
 
 
 def parse_target(url: str) -> Target:
@@ -43,11 +44,25 @@ def _rebuild(point: InjectionPoint, new_value: str) -> str:
     return urlunsplit((parts.scheme, parts.netloc, parts.path, query, ""))
 
 
-def build_url(point: InjectionPoint, payload: str) -> str:
-    """URL avec `payload` SQL enveloppé selon le contexte du point (exploitation UNION)."""
-    return _rebuild(point, _WRAPPERS[point.context](point.param.value, payload))
+def build_url(
+    point: InjectionPoint, payload: str, tamper: list[Tamper] | None = None
+) -> str:
+    """URL avec `payload` SQL enveloppé selon le contexte du point (exploitation UNION).
+
+    Si `tamper` est fourni, la chaîne de tampers est appliquée à la charge enveloppée
+    (valeur d'origine + payload + commentaire) avant l'encodage URL.
+    """
+    wrapped = _WRAPPERS[point.context](point.param.value, payload)
+    if tamper:
+        wrapped = apply_chain(wrapped, tamper)
+    return _rebuild(point, wrapped)
 
 
-def build_raw(point: InjectionPoint, raw_suffix: str) -> str:
+def build_raw(
+    point: InjectionPoint, raw_suffix: str, tamper: list[Tamper] | None = None
+) -> str:
     """URL avec `raw_suffix` concaténé brut à la valeur d'origine (sondes error-based)."""
-    return _rebuild(point, point.param.value + raw_suffix)
+    raw = point.param.value + raw_suffix
+    if tamper:
+        raw = apply_chain(raw, tamper)
+    return _rebuild(point, raw)
